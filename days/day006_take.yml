@@ -1,0 +1,34 @@
+day: 6
+operator: take
+category: tabular
+description: Returns a specified number of rows
+explanation: |
+  take (also known as limit) returns up to the specified number of rows from the result set.
+  The order of rows is not guaranteed unless you use sort/order before take. This operator is commonly used for sampling data or limiting large result sets.
+  Use take for quick data exploration or when you only need a subset of results.
+examples:
+  - query: | 
+      DeviceProcessEvents
+      | take 10
+    description: >
+      Returns any 10 rows from the DeviceProcessEvents table.
+  - query: | 
+      SecurityEvent
+      | sort by TimeGenerated desc
+      | take 100
+    description: >
+      Returns the 100 most recent security events.
+  - query: | 
+      DeviceNetworkEvents
+      | where RemoteIPType == "Public"
+      | take 50
+    description: >
+      Returns up to 50 network events with public remote IPs.
+
+answer: |
+  // Run this KQL replacing <Your Answer Here> with your answer to validate, 
+  let answer = "<Your Answer Here>";
+  let repo = "tom564";
+  let answer_hash = "6b4550654536ecdc67b2684f4748120d75d54fd7be7b8a63d21e74f79a3bf65f";
+  let attempt = hash_sha256(strcat(answer, repo));
+  print iff(attempt == answer_hash, "Correct", "Incorrect")

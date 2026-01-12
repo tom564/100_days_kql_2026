@@ -1,0 +1,25 @@
+day: 12
+operator: make-series
+category: tabular
+description: Creates time series arrays for temporal analysis
+explanation: |
+  make-series creates aggregated time series data, producing arrays of values aligned to time bins. It's particularly useful for time series analysis and visualization.
+  Unlike summarize with bin(), make-series fills gaps with null or default values, ensuring consistent time intervals. This is essential for time series algorithms and charting.
+  Use with series functions (series_decompose, series_fir, series_outliers, etc.) for advanced time series analytics.
+examples:
+  - query: | 
+      SecurityEvent
+      | make-series EventCount = count() default = 0 on TimeGenerated step 1h
+    description: >
+      Creates a time series of event counts per hour, filling gaps with zeros.
+  - query: | 
+      DeviceNetworkEvents
+      | make-series TotalBytes = sum(SentBytes + ReceivedBytes) default = 0 on Timestamp step 1h by DeviceName
+    description: >
+      Creates time series of total bytes per device, grouped by device name.
+  - query: | 
+      DeviceProcessEvents
+      | make-series ProcessCount = count() on Timestamp from ago(7d) to now() step 1d by DeviceName
+    description: >
+      Creates a 7-day time series of process counts
+

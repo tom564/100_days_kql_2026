@@ -1,51 +1,35 @@
-day: 1
-operator: where
+day: 5
+operator: sort
 category: tabular
-description: Filters rows based on a condition
-covers:
-- ==
-- '!='
-- <
-- '>'
-- <=
-- '>='
-- =~
-- '!~'
-- in
-- '!in'
-- between
-- '!between'
-- 'contains'
-- 'has'
+description: Orders rows by one or more columns
 explanation: |
-  The where operator filters rows by boolean expressions, each expression will result
-  in either true or false. You can use comparison operators (==, !=, <, >, <=, >=) for numeric types and string comparison like regex, has, contains, has_any, has_all. 
-  You can also use membership operators (in, !in, between, !between) to check if a value exists within a set or range. Combine multiple conditions using logical operators (and, or, not) to create complex filters.
-
+  sort (also known as order) arranges rows in ascending (asc) or descending (desc) order based on one or more columns.
+  By default, sort uses ascending order. You can specify multiple columns to sort by, and they will be applied in order.
+  Use nulls first or nulls last to control where null values appear in the sorted results.
 examples:
   - query: | 
       DeviceProcessEvents
-      | where ProcessCommandLine contains "powershell" and TimeGenerated > ago(7d)
+      | sort by TimeGenerated desc
     description: >
-      Find all process events in the last 7 days where the command line contains "powershell".
-  - query: |
+      Orders process events by timestamp in descending order (most recent first).
+  - query: | 
       SecurityEvent
-      | where EventID in (4624, 4625) and AccountType == "User"
+      | sort by DeviceName asc, TimeGenerated desc
     description: >
-      Retrieve security events with EventID 4624 or 4625 for user accounts.
-  - query: |
-      SecurityEvent
-      | where TimeGenerated between (datetime(2026-01-01) .. datetime(2026-01-31))
+      First sorts by device name alphabetically, then by timestamp for each device.
+  - query: | 
+      DeviceNetworkEvents
+      | sort by RemoteIP, ReceivedBytes desc nulls last
     description: >
-      Get security events that occurred between two times
+      Sorts by remote IP, then by received bytes with null values at the end.
 
 challenge: |
-  Using the DeviceProcessEvents sample dataset answer the following question: 
+  Using the DeviceProcessEvents sample dataset answer the following question:
 
-  How many rows are returned when the DeviceName contains 'castelblack' with an InitiatingProcessParentFileName of 'powershell.exe' where the SID is not "S-1-5-16"? 
+  Sort the events by ProcessCreationTime in descending order and return the FileName of the 5th row.
 
   ```
-    // ----------------------------
+      // ----------------------------
     // DemoDeviceProcessEvents
     // ----------------------------
     let DemoDeviceProcessEvents = externaldata(
@@ -124,12 +108,13 @@ challenge: |
     )
     ["https://raw.githubusercontent.com/tom564/100_days_kql_2026/refs/heads/main/Datasets/DemoDeviceProcessEvents.csv.gz"]
     with(format="csv", ignoreFirstRecord=true);
+    DemoDeviceProcessEvents
   ```
 
 answer: |
   // Run this KQL replacing <Your Answer Here> with your answer to validate, 
   let answer = "<Your Answer Here>";
   let repo = "tom564";
-  let answer_hash = "d41282223fdf8619c6da2a8f540f62bae412a2953c5b74acac1ec9d2f93b7ac7";
+  let answer_hash = "11c656244402c2d1046df1a9e5f37041ce8eb4a7e18fa538aafe1788b0603456";
   let attempt = hash_sha256(strcat(answer, repo));
   print iff(attempt == answer_hash, "Correct", "Incorrect")

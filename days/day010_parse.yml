@@ -1,0 +1,24 @@
+day: 10
+operator: parse
+category: tabular
+description: Extracts structured data from strings
+explanation: |
+  parse extracts values from string fields using patterns. It's useful for parsing semi-structured text like logs, command lines, or file paths.
+  Use simple mode for basic pattern matching or regex mode for complex extractions. Parse creates new columns from the extracted values.
+  For repeated or performance-critical parsing, consider using parse-where or extract functions instead.
+examples:
+  - query: | 
+      DeviceProcessEvents
+      | parse ProcessCommandLine with "powershell.exe -" Flag " " ScriptPath
+    description: >
+      Extracts the flag and script path from PowerShell command lines.
+  - query: | 
+      SecurityEvent
+      | parse EventData with * '<Data Name="TargetUserName">' UserName '</Data>' *
+    description: >
+      Extracts the target username from XML-formatted event data.
+  - query: | 
+      Syslog
+      | parse kind=regex SyslogMessage with "User " User:string " from " IPAddress:string
+    description: >
+      Uses regex mode to extract user and IP address from syslog messages.

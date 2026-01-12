@@ -1,51 +1,90 @@
-day: 1
-operator: where
+day: 8
+operator: join
 category: tabular
-description: Filters rows based on a condition
-covers:
-- ==
-- '!='
-- <
-- '>'
-- <=
-- '>='
-- =~
-- '!~'
-- in
-- '!in'
-- between
-- '!between'
-- 'contains'
-- 'has'
+description: Merges rows from two tables
 explanation: |
-  The where operator filters rows by boolean expressions, each expression will result
-  in either true or false. You can use comparison operators (==, !=, <, >, <=, >=) for numeric types and string comparison like regex, has, contains, has_any, has_all. 
-  You can also use membership operators (in, !in, between, !between) to check if a value exists within a set or range. Combine multiple conditions using logical operators (and, or, not) to create complex filters.
-
+  join combines rows from two tables based on matching values in specified columns. There are multiple join types (kinds): inner, leftouter, rightouter, fullouter, leftanti, rightanti, leftsemi, and rightsemi.
+  The default join kind is innerunique. Use the 'on' clause to specify the columns to match. Join is essential for correlating data across different tables.
 examples:
   - query: | 
+      SecurityEvent
+      | where EventID == 4624
+      | join kind=leftouter (
+          SecurityEvent
+          | where EventID == 4634
+      ) on $left.LogonId == $right.LogonId
+    description: >
+      Left outer join successful logons with logoffs by LogonId.
+  - query: | 
       DeviceProcessEvents
-      | where ProcessCommandLine contains "powershell" and TimeGenerated > ago(7d)
+      | summarize ProcessCount = count() by DeviceName
+      | join kind=inner (
+          DeviceInfo
+          | project DeviceName, OSPlatform
+      ) on DeviceName
     description: >
-      Find all process events in the last 7 days where the command line contains "powershell".
-  - query: |
-      SecurityEvent
-      | where EventID in (4624, 4625) and AccountType == "User"
-    description: >
-      Retrieve security events with EventID 4624 or 4625 for user accounts.
-  - query: |
-      SecurityEvent
-      | where TimeGenerated between (datetime(2026-01-01) .. datetime(2026-01-31))
-    description: >
-      Get security events that occurred between two times
+      Joins aggregated process counts with device information.
 
 challenge: |
-  Using the DeviceProcessEvents sample dataset answer the following question: 
+  Using the DeviceProcessEvents and DeviceInfo sample dataset answer the following question:
 
-  How many rows are returned when the DeviceName contains 'castelblack' with an InitiatingProcessParentFileName of 'powershell.exe' where the SID is not "S-1-5-16"? 
+  Join the DeviceProcessEvents table where ReportId == "1072407" onto DemoDeviceInfo table on DeviceId, and return the OSDistribution. 
 
   ```
-    // ----------------------------
+  // DemoDeviceInfo
+  // ----------------------------
+  let DemoDeviceInfo = externaldata(
+      AdditionalFields:dynamic,
+      ClientVersion:string,
+      DeviceId:string,
+      DeviceName:string,
+      DeviceObjectId:string,
+      IsAzureADJoined:bool,
+      LoggedOnUsers:dynamic,
+      MachineGroup:string,
+      OSArchitecture:string,
+      OSBuild:long,
+      OSPlatform:string,
+      OSVersion:string,
+      RegistryDeviceTag:string,
+      ReportId:long,
+      TimeGenerated:datetime,
+      Timestamp:datetime,
+      AadDeviceId:string,
+      DeviceCategory:string,
+      DeviceSubtype:string,
+      DeviceType:string,
+      JoinType:string,
+      MergedDeviceIds:string,
+      MergedToDeviceId:string,
+      Model:string,
+      OnboardingStatus:string,
+      OSDistribution:string,
+      OSVersionInfo:string,
+      Vendor:string,
+      SensorHealthState:string,
+      IsExcluded:bool,
+      ExclusionReason:string,
+      AssetValue:string,
+      ExposureLevel:string,
+      IsInternetFacing:bool,
+      DeviceManualTags:string,
+      DeviceDynamicTags:string,
+      AwsResourceName:string,
+      GcpFullResourceName:string,
+      CloudPlatforms:string,
+      HardwareUuid:string,
+      HostDeviceId:string,
+      IsTransient:bool,
+      MitigationStatus:string,
+      OsBuildRevision:string,
+      RestrictedDeviceSecurityOperations:string,
+      SourceSystem:string,
+      Type:string
+  )
+  ["https://raw.githubusercontent.com/tom564/100_days_kql_2026/refs/heads/main/Datasets/DemoDeviceInfo.csv.gz"]
+  with(format="csv", ignoreFirstRecord=true);
+      // ----------------------------
     // DemoDeviceProcessEvents
     // ----------------------------
     let DemoDeviceProcessEvents = externaldata(
@@ -124,12 +163,13 @@ challenge: |
     )
     ["https://raw.githubusercontent.com/tom564/100_days_kql_2026/refs/heads/main/Datasets/DemoDeviceProcessEvents.csv.gz"]
     with(format="csv", ignoreFirstRecord=true);
+    DemoDeviceProcessEvents
   ```
 
 answer: |
   // Run this KQL replacing <Your Answer Here> with your answer to validate, 
   let answer = "<Your Answer Here>";
   let repo = "tom564";
-  let answer_hash = "d41282223fdf8619c6da2a8f540f62bae412a2953c5b74acac1ec9d2f93b7ac7";
+  let answer_hash = "f8be3b7af8e4ec33c01c3b15896d89c1cbb83b5c398e5c7d2ed9adb3a88dbbd3";
   let attempt = hash_sha256(strcat(answer, repo));
   print iff(attempt == answer_hash, "Correct", "Incorrect")

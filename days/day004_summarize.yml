@@ -1,53 +1,33 @@
-day: 1
-operator: where
+day: 4
+operator: summarize
 category: tabular
-description: Filters rows based on a condition
-covers:
-- ==
-- '!='
-- <
-- '>'
-- <=
-- '>='
-- =~
-- '!~'
-- in
-- '!in'
-- between
-- '!between'
-- 'contains'
-- 'has'
+description: Aggregates data into groups
 explanation: |
-  The where operator filters rows by boolean expressions, each expression will result
-  in either true or false. You can use comparison operators (==, !=, <, >, <=, >=) for numeric types and string comparison like regex, has, contains, has_any, has_all. 
-  You can also use membership operators (in, !in, between, !between) to check if a value exists within a set or range. Combine multiple conditions using logical operators (and, or, not) to create complex filters.
-
+  summarize produces a table that aggregates the content of the input table using aggregation functions like count(), sum(), avg(), min(), max(), etc.
+  Use the 'by' clause to group results by one or more columns. Without a 'by' clause, summarize returns a single row with aggregated values across all input rows.
 examples:
   - query: | 
       DeviceProcessEvents
-      | where ProcessCommandLine contains "powershell" and TimeGenerated > ago(7d)
+      | summarize Count = count() by DeviceName
     description: >
-      Find all process events in the last 7 days where the command line contains "powershell".
-  - query: |
+      Counts the number of process events for each device.
+  - query: | 
+      DeviceNetworkEvents
+      | summarize TotalBytes = sum(SentBytes + ReceivedBytes) by RemoteIP
+    description: >
+      Calculates the total bytes sent and received for each remote IP address.
+  - query: | 
       SecurityEvent
-      | where EventID in (4624, 4625) and AccountType == "User"
+      | summarize EventCount = count(), FirstSeen = min(TimeGenerated), LastSeen = max(TimeGenerated) by EventID
     description: >
-      Retrieve security events with EventID 4624 or 4625 for user accounts.
-  - query: |
-      SecurityEvent
-      | where TimeGenerated between (datetime(2026-01-01) .. datetime(2026-01-31))
-    description: >
-      Get security events that occurred between two times
+      Aggregates security events by EventID, showing count and time range.
 
 challenge: |
-  Using the DeviceProcessEvents sample dataset answer the following question: 
+  Using the DeviceProcessEvents sample dataset answer the following question:
 
-  How many rows are returned when the DeviceName contains 'castelblack' with an InitiatingProcessParentFileName of 'powershell.exe' where the SID is not "S-1-5-16"? 
+  What is the total count of events where the InitiatingProcessFileName is 'powershell.exe' grouped by DeviceName? Return the DeviceName with the highest count.
 
   ```
-    // ----------------------------
-    // DemoDeviceProcessEvents
-    // ----------------------------
     let DemoDeviceProcessEvents = externaldata(
         AccountDomain:string,
         AccountName:string,
@@ -124,12 +104,13 @@ challenge: |
     )
     ["https://raw.githubusercontent.com/tom564/100_days_kql_2026/refs/heads/main/Datasets/DemoDeviceProcessEvents.csv.gz"]
     with(format="csv", ignoreFirstRecord=true);
+    DemoDeviceProcessEvents
   ```
 
 answer: |
   // Run this KQL replacing <Your Answer Here> with your answer to validate, 
   let answer = "<Your Answer Here>";
   let repo = "tom564";
-  let answer_hash = "d41282223fdf8619c6da2a8f540f62bae412a2953c5b74acac1ec9d2f93b7ac7";
+  let answer_hash = "ff1096630a764b1b8359f89b57100ecacf294dabe0a00a6f9bcdcbc86a85a374";
   let attempt = hash_sha256(strcat(answer, repo));
   print iff(attempt == answer_hash, "Correct", "Incorrect")

@@ -1,0 +1,24 @@
+day: 9
+operator: union
+category: tabular
+description: Combines rows from multiple tables
+explanation: |
+  union combines rows from two or more tables into a single result set. All tables should have compatible schemas, but union will include all columns from all tables.
+  Use 'kind=inner' to include only columns common to all tables, or 'kind=outer' (default) to include all columns. The 'withsource' parameter adds a column indicating the source table.
+examples:
+  - query: | 
+      union DeviceProcessEvents, DeviceNetworkEvents
+      | take 100
+    description: >
+      Combines process and network events into a single result set.
+  - query: | 
+      union withsource=TableName SecurityEvent, Syslog
+      | where TimeGenerated > ago(1h)
+    description: >
+      Combines security events and syslog with a source column, filtered to the last hour.
+  - query: | 
+      union kind=inner 
+        (SecurityEvent | project TimeGenerated, Computer, EventID),
+        (Syslog | project TimeGenerated, Computer, Facility)
+    description: >
+      Inner union keeping only common columns (TimeGenerated, Computer).

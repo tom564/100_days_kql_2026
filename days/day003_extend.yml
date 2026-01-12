@@ -1,51 +1,34 @@
-day: 1
-operator: where
+day: 3
+operator: extend
 category: tabular
-description: Filters rows based on a condition
-covers:
-- ==
-- '!='
-- <
-- '>'
-- <=
-- '>='
-- =~
-- '!~'
-- in
-- '!in'
-- between
-- '!between'
-- 'contains'
-- 'has'
+description: Adds calculated columns
 explanation: |
-  The where operator filters rows by boolean expressions, each expression will result
-  in either true or false. You can use comparison operators (==, !=, <, >, <=, >=) for numeric types and string comparison like regex, has, contains, has_any, has_all. 
-  You can also use membership operators (in, !in, between, !between) to check if a value exists within a set or range. Combine multiple conditions using logical operators (and, or, not) to create complex filters.
-
+  extend adds computed columns while preserving existing ones. These fields may come from extraction, transformation, or other calculations.
+  Use extend for derived fields that will be used later in the query pipeline.
 examples:
   - query: | 
       DeviceProcessEvents
-      | where ProcessCommandLine contains "powershell" and TimeGenerated > ago(7d)
+      | extend IsPowerShell = iff(ProcessCommandLine contains "powershell", true, false)
     description: >
-      Find all process events in the last 7 days where the command line contains "powershell".
-  - query: |
+      Adds a new column IsPowerShell that indicates whether the ProcessCommandLine contains "powershell".
+  - query: | 
+      DeviceNetworkEvents
+      | extend HourOfDay = datetime_part("hour", TimeGenerated)
+    description: >
+      Adds a new column HourOfDay that extracts the hour from the TimeGenerated timestamp.
+  - query: | 
       SecurityEvent
-      | where EventID in (4624, 4625) and AccountType == "User"
+      | extend AccountDomainUpper = toupper(AccountDomain)
     description: >
-      Retrieve security events with EventID 4624 or 4625 for user accounts.
-  - query: |
-      SecurityEvent
-      | where TimeGenerated between (datetime(2026-01-01) .. datetime(2026-01-31))
-    description: >
-      Get security events that occurred between two times
+      Adds a new column AccountDomainUpper that contains the uppercase version of the AccountDomain.
 
 challenge: |
-  Using the DeviceProcessEvents sample dataset answer the following question: 
+  Using the DeviceProcessEvents sample dataset answer the following question:
 
-  How many rows are returned when the DeviceName contains 'castelblack' with an InitiatingProcessParentFileName of 'powershell.exe' where the SID is not "S-1-5-16"? 
+  Where ReportId is 1073545, extend a column to contain the sha256 hash of ProcessCommandLine and use this as the answer.
 
   ```
-    // ----------------------------
+      // ----------------------------
     // DemoDeviceProcessEvents
     // ----------------------------
     let DemoDeviceProcessEvents = externaldata(
@@ -124,12 +107,15 @@ challenge: |
     )
     ["https://raw.githubusercontent.com/tom564/100_days_kql_2026/refs/heads/main/Datasets/DemoDeviceProcessEvents.csv.gz"]
     with(format="csv", ignoreFirstRecord=true);
-  ```
+    DemoDeviceProcessEvents
+    | where ReportId == 1073545
+    ```
+
 
 answer: |
   // Run this KQL replacing <Your Answer Here> with your answer to validate, 
   let answer = "<Your Answer Here>";
   let repo = "tom564";
-  let answer_hash = "d41282223fdf8619c6da2a8f540f62bae412a2953c5b74acac1ec9d2f93b7ac7";
+  let answer_hash = "2ab42e25596fe0ea7c7f9a7bf0476d0408735034f2a2c5aff2aa1f7769c2884f";
   let attempt = hash_sha256(strcat(answer, repo));
   print iff(attempt == answer_hash, "Correct", "Incorrect")

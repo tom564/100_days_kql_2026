@@ -1,0 +1,19 @@
+day: 2
+operator: project
+category: tabular
+description: Selects columns to include in output
+
+explanation: |
+  project selects, renames, or computes columns for downstream operators. It removes any columns not listed.
+  Unlike other varients of project e.g. project-keep project only retains columns explicitly mentioned in the statement and does not support wildcards.
+examples: 
+  - query: | 
+      DeviceProcessEvents
+      | project TimeGenerated, DeviceName, ProcessCommandLine, AccountName
+    description: >
+      Returns only the TimeGenerated, DeviceName, ProcessCommandLine, and AccountName columns from the DeviceProcessEvents table.
+  - query: | 
+      DeviceProcessEvents
+      | project TimeGenerated, DeviceName, ProcessCommandLine, RenamedAccountName=AccountName
+    description: >
+      Returns only the TimeGenerated, DeviceName, ProcessCommandLine, and RenamedAccountName columns from the DeviceProcessEvents table. The AccountName column is renamed to RenamedAccountName.
